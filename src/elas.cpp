@@ -153,7 +153,7 @@ public:
       model.fromCameraInfo(*l_info_msg, *r_info_msg);
       PointCloud::Ptr point_cloud(new PointCloud());
       point_cloud->header.frame_id = l_info_msg->header.frame_id;
-      point_cloud->header.stamp = l_info_msg->header.stamp;
+      point_cloud->header.stamp = l_info_msg->header.stamp.toNSec();
       point_cloud->width = 1;
       point_cloud->height = inliers.size();
       point_cloud->points.resize(inliers.size());

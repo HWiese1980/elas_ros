@@ -69,7 +69,7 @@ public:
     elas_sub_.subscribe(nh, elas_frame_data_topic, 1);
     pose_sub_.subscribe(nh, pose_topic, 1);
     tf_.reset(new tf::TransformListener(nh));
- 
+
     // Publish
     pc_pub_.reset(new ros::Publisher(local_nh.advertise<PointCloud>("point_cloud", 1)));
 
@@ -117,11 +117,11 @@ public:
     tf::poseMsgToTF(current_pose->pose, current_inverse);
     current_inverse *= trans;
     tf::Pose current_transform = current_inverse.inverse();
-    float fc00 = current_transform.getBasis()[0][0]; float fc01 = current_transform.getBasis()[0][1]; 
+    float fc00 = current_transform.getBasis()[0][0]; float fc01 = current_transform.getBasis()[0][1];
     float fc02 = current_transform.getBasis()[0][2]; float fc03 = current_transform.getOrigin()[0];
-    float fc10 = current_transform.getBasis()[1][0]; float fc11 = current_transform.getBasis()[1][1]; 
+    float fc10 = current_transform.getBasis()[1][0]; float fc11 = current_transform.getBasis()[1][1];
     float fc12 = current_transform.getBasis()[1][2]; float fc13 = current_transform.getOrigin()[1];
-    float fc20 = current_transform.getBasis()[2][0]; float fc21 = current_transform.getBasis()[2][1]; 
+    float fc20 = current_transform.getBasis()[2][0]; float fc21 = current_transform.getBasis()[2][1];
     float fc22 = current_transform.getBasis()[2][2]; float fc23 = current_transform.getOrigin()[2];
 
     // Apply the transform...
@@ -195,18 +195,18 @@ public:
                 if (current_d > 0.0)
                 {
                   // Check whether they are close enough to fuse
-                  if (fabs(last_x-current_frame_data.x[current_addr]) + 
+                  if (fabs(last_x-current_frame_data.x[current_addr]) +
                       fabs(last_y-current_frame_data.y[current_addr]) +
                       fabs(last_z-current_frame_data.z[current_addr]) < 0.2)
                   {
                     current_frame_data.x[current_addr] = (current_frame_data.x[current_addr]+last_x)/2.0;
                     current_frame_data.y[current_addr] = (current_frame_data.y[current_addr]+last_y)/2.0;
                     current_frame_data.z[current_addr] = (current_frame_data.z[current_addr]+last_z)/2.0;
-                    current_frame_data.r[current_addr] = (current_frame_data.r[current_addr] + 
+                    current_frame_data.r[current_addr] = (current_frame_data.r[current_addr] +
                                                                    last_frame_data.r[last_addr])/2.0;
-                    current_frame_data.g[current_addr] = (current_frame_data.g[current_addr] + 
+                    current_frame_data.g[current_addr] = (current_frame_data.g[current_addr] +
                                                                    last_frame_data.g[last_addr])/2.0;
-                    current_frame_data.b[current_addr] = (current_frame_data.b[current_addr] + 
+                    current_frame_data.b[current_addr] = (current_frame_data.b[current_addr] +
                                                                    last_frame_data.b[last_addr])/2.0;
                     added = true;
                   }
@@ -224,10 +224,10 @@ public:
                   added = true;
                 }
 
-                if (!added) add_point(last_x, last_y, last_z, 
+                if (!added) add_point(last_x, last_y, last_z,
                                       last_frame_data.r[last_addr], last_frame_data.g[last_addr], last_frame_data.b[last_addr]);
               }
-              else add_point(last_x, last_y, last_z, 
+              else add_point(last_x, last_y, last_z,
                              last_frame_data.r[last_addr], last_frame_data.g[last_addr], last_frame_data.b[last_addr]);
             }
           }
@@ -237,7 +237,7 @@ public:
     else first = false;
 
     // Update the point cloud's header
-    point_cloud.header.stamp = current_frame_data_->header.stamp;
+    point_cloud.header.stamp = current_frame_data_->header.stamp.toNSec();
 
     // Publish the cloud...
     pc_pub_->publish(point_cloud);

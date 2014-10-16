@@ -1,17 +1,36 @@
-cmake_minimum_required(VERSION 2.4.6)
-include($ENV{ROS_ROOT}/core/rosbuild/rosbuild.cmake)
+cmake_minimum_required(VERSION 2.8.3)
+project(elas_ros)
+find_package(catkin REQUIRED COMPONENTS roscpp std_msgs sensor_msgs nav_msgs message_filters image_transport cv_bridge image_geometry tf pcl_ros geometry_msgs message_generation)
+find_package(OpenCV REQUIRED)
+find_package(PCL REQUIRED)
+find_package(Boost REQUIRED COMPONENTS signals)
 
-# Append to CPACK_SOURCE_IGNORE_FILES a semicolon-separated list of
-# directories (or patterns, but directories should suffice) that should
-# be excluded from the distro.  This is not the place to put things that
-# should be ignored everywhere, like "build" directories; that happens in
-# rosbuild/rosbuild.cmake.  Here should be listed packages that aren't
-# ready for inclusion in a distro.
-#
-# This list is combined with the list in rosbuild/rosbuild.cmake.  Note
-# that CMake 2.6 may be required to ensure that the two lists are combined
-# properly.  CMake 2.4 seems to have unpredictable scoping rules for such
-# variables.
-#list(APPEND CPACK_SOURCE_IGNORE_FILES /core/experimental)
 
-rosbuild_make_distribution(0.1.0)
+
+add_message_files(DIRECTORY msg FILES ElasFrameData.msg)
+
+generate_messages(DEPENDENCIES std_msgs sensor_msgs)
+
+catkin_package()
+
+#include(${CMAKE_CURRENT_SOURCE_DIR}/libelas/CMakeLists.txt)
+
+# use sse3 instruction set
+SET(CMAKE_CXX_FLAGS "-msse3")
+
+add_library(elas
+            libelas/src/descriptor.cpp
+            libelas/src/elas.cpp
+            libelas/src/filter.cpp
+            libelas/src/matrix.cpp
+            libelas/src/triangle.cpp)
+
+include_directories(include libelas/src ${catkin_INCLUDE_DIRS} ${OpenCV_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+
+add_executable(elas_ros src/elas.cpp)
+add_dependencies(elas_ros elas_ros_msgs_gencpp)
+target_link_libraries(elas_ros elas ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+add_executable(pc_construction src/pc_construction.cpp)
+add_dependencies(pc_construction elas_ros_msgs_gencpp)
+target_link_libraries(pc_construction ${catkin_LIBRARIES} ${pcl_LIBRARIES} ${Boost_LIBRARIES})
