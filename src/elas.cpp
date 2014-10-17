@@ -77,6 +77,36 @@ public:
 
     pub_disparity_ = local_nh.advertise<stereo_msgs::DisparityImage>("disparity_raw", 1);
 
+    int disp_min, disp_max, support_texture, candidate_stepsize;
+    int incon_window_size, incon_threshold, incon_min_support;
+    int add_corners, grid_size, gamma, sigma, sradius, match_texture, lr_threshold;
+    int speckle_sim_threshold, speckle_size, ipol_gap_width, filter_median, filter_adaptive_mean;
+    int postprocess_only_left, subsampling;
+    double support_threshold, beta;
+    local_nh.param("disp_min", disp_min, 0);
+    local_nh.param("disp_max", disp_max, 255);
+    local_nh.param("support_threshold", support_threshold, 0.95);
+    local_nh.param("support_texture", support_texture, 10);
+    local_nh.param("candidate_stepsize", candidate_stepsize, 5);
+    local_nh.param("incon_window_size", incon_window_size, 5);
+    local_nh.param("incon_threshold", incon_threshold, 5);
+    local_nh.param("incon_min_support", incon_min_support, 5);
+    local_nh.param("add_corners", add_corners, 0);
+    local_nh.param("grid_size", grid_size, 20);
+    local_nh.param("beta", beta, 0.02);
+    local_nh.param("gamma", gamma, 3);
+    local_nh.param("sigma", sigma, 1);
+    local_nh.param("sradius", sradius, 2);
+    local_nh.param("match_texture", match_texture, 1);
+    local_nh.param("lr_threshold", lr_threshold, 2);
+    local_nh.param("speckle_sim_threshold", speckle_sim_threshold, 1);
+    local_nh.param("speckle_size", speckle_size, 200);
+    local_nh.param("ipol_gap_width", ipol_gap_width, 300);
+    local_nh.param("filter_median", filter_median, 0);
+    local_nh.param("filter_adaptive_mean", filter_adaptive_mean, 1);
+    local_nh.param("postprocess_only_left", postprocess_only_left, 1);
+    local_nh.param("subsampling", subsampling, 0);
+
     // Synchronize input topics. Optionally do approximate synchronization.
     bool approx;
     local_nh.param("approximate_sync", approx, false);
@@ -99,29 +129,29 @@ public:
     param.reset(new Elas::parameters);
 
     /* Parameters tunned*/
-    param->disp_min              = 0;
-    param->disp_max              = 255;
-    param->support_threshold     = 0.95;
-    param->support_texture       = 10;
-    param->candidate_stepsize    = 5;
-    param->incon_window_size     = 5;
-    param->incon_threshold       = 5;
-    param->incon_min_support     = 5;
-    param->add_corners           = 0;
-    param->grid_size             = 20;
-    param->beta                  = 0.02;
-    param->gamma                 = 3;
-    param->sigma                 = 1;
-    param->sradius               = 2;
-    param->match_texture         = 1;
-    param->lr_threshold          = 2;
-    param->speckle_sim_threshold = 1;
-    param->speckle_size          = 200;
-    param->ipol_gap_width        = 300;
-    param->filter_median         = 0;
-    param->filter_adaptive_mean  = 1;
-    param->postprocess_only_left = 1;
-    param->subsampling           = 0;
+    param->disp_min              = disp_min;
+    param->disp_max              = disp_max;
+    param->support_threshold     = support_threshold;
+    param->support_texture       = support_texture;
+    param->candidate_stepsize    = candidate_stepsize;
+    param->incon_window_size     = incon_window_size;
+    param->incon_threshold       = incon_threshold;
+    param->incon_min_support     = incon_min_support;
+    param->add_corners           = add_corners;
+    param->grid_size             = grid_size;
+    param->beta                  = beta;
+    param->gamma                 = gamma;
+    param->sigma                 = sigma;
+    param->sradius               = sradius;
+    param->match_texture         = match_texture;
+    param->lr_threshold          = lr_threshold;
+    param->speckle_sim_threshold = speckle_sim_threshold;
+    param->speckle_size          = speckle_size;
+    param->ipol_gap_width        = ipol_gap_width;
+    param->filter_median         = filter_median;
+    param->filter_adaptive_mean  = filter_adaptive_mean;
+    param->postprocess_only_left = postprocess_only_left;
+    param->subsampling           = subsampling;
 
     //param->match_texture = 1;
     //param->postprocess_only_left = 1;
