@@ -49,13 +49,6 @@ void Elas::process (uint8_t* I1_,uint8_t* I2_,float* D1,float* D2,const int32_t*
       memcpy(I2+v*bpl,I2_+v*dims[2],width*sizeof(uint8_t));
     }
   }
-  
-  // allocate memory for disparity grid
-  int32_t grid_width   = (int32_t)ceil((float)width/(float)param.grid_size);
-  int32_t grid_height  = (int32_t)ceil((float)height/(float)param.grid_size);
-  int32_t grid_dims[3] = {param.disp_max+2,grid_width,grid_height};
-  int32_t* disparity_grid_1 = (int32_t*)calloc((param.disp_max+2)*grid_height*grid_width,sizeof(int32_t));
-  int32_t* disparity_grid_2 = (int32_t*)calloc((param.disp_max+2)*grid_height*grid_width,sizeof(int32_t));
 
 #ifdef PROFILE
   timer.start("Descriptor");  
@@ -67,6 +60,14 @@ void Elas::process (uint8_t* I1_,uint8_t* I2_,float* D1,float* D2,const int32_t*
   timer.start("Support Matches");
 #endif
   vector<support_pt> p_support = computeSupportMatches(desc1.I_desc,desc2.I_desc);
+  
+  // if not enough support points for triangulation
+  if (p_support.size()<3) {
+    cout << "ERROR: Need at least 3 support points!" << endl;
+    _mm_free(I1);
+    _mm_free(I2);
+    return;
+  }
 
 #ifdef PROFILE
   timer.start("Delaunay Triangulation");
@@ -83,6 +84,14 @@ void Elas::process (uint8_t* I1_,uint8_t* I2_,float* D1,float* D2,const int32_t*
 #ifdef PROFILE
   timer.start("Grid");
 #endif
+
+  // allocate memory for disparity grid
+  int32_t grid_width   = (int32_t)ceil((float)width/(float)param.grid_size);
+  int32_t grid_height  = (int32_t)ceil((float)height/(float)param.grid_size);
+  int32_t grid_dims[3] = {param.disp_max+2,grid_width,grid_height};
+  int32_t* disparity_grid_1 = (int32_t*)calloc((param.disp_max+2)*grid_height*grid_width,sizeof(int32_t));
+  int32_t* disparity_grid_2 = (int32_t*)calloc((param.disp_max+2)*grid_height*grid_width,sizeof(int32_t));
+  
   createGrid(p_support,disparity_grid_1,grid_dims,0);
   createGrid(p_support,disparity_grid_2,grid_dims,1);
 
@@ -342,6 +351,8 @@ inline int16_t Elas::computeMatchingDisparity (const int32_t &u,const int32_t &v
 
       // best + second best match
       if (sum<min_1_E) {
+        min_2_E = min_1_E;   
+        min_2_d = min_1_d;
         min_1_E = sum;
         min_1_d = d;
       } else if (sum<min_2_E) {
@@ -1231,6 +1242,41 @@ void Elas::gapInterpolation(float* D) {
       // otherwise increment counter
       } else {
         count++;
+      }
+    }
+
+    // added extrapolation to top and bottom since bottom rows sometimes stay unlabeled...
+    // DS 5/12/2014
+
+    // if full size disp map requested
+    if (param.add_corners) {
+
+      // extrapolate towards top
+      for (int32_t v=0; v<D_height; v++) {
+
+        // get address of this location
+        addr = getAddressOffsetImage(u,v,D_width);
+
+        // if disparity valid
+        if (*(D+addr)>=0) {
+          for (int32_t v2=max(v-D_ipol_gap_width,0); v2<v; v2++)
+            *(D+getAddressOffsetImage(u,v2,D_width)) = *(D+addr);
+          break;
+        }
+      }
+
+      // extrapolate towards the bottom
+      for (int32_t v=D_height-1; v>=0; v--) {
+
+        // get address of this location
+        addr = getAddressOffsetImage(u,v,D_width);
+
+        // if disparity valid
+        if (*(D+addr)>=0) {
+          for (int32_t v2=v; v2<=min(v+D_ipol_gap_width,D_height-1); v2++)
+            *(D+getAddressOffsetImage(u,v2,D_width)) = *(D+addr);
+          break;
+        }
       }
     }
   }
